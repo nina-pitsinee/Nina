@@ -1,162 +1,261 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+#group 12 
+import os
+# example of recipe in txt
+# ID;Name;Ingredient1|Ingredient2|...;Instruction1|Instruction2|...;Calories
 
-# C extensions
-*.so
+#responsible by Pitsinee Chantarothai 
+def clear_screen():
+    os.system("cls" if os.name == "nt" else "clear")
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+#responsible by Pitsinee Chantarothai    
+# Load the file 
+def load(filename):
+    try:
+        with open(filename, 'r') as file:
+            recipes = file.readlines() 
+    except FileNotFoundError:
+        print(f"Error: The file '{filename}' was not found.")
+        recipes = []
+    except PermissionError:
+        print(f"Error: You do not have permission to read '{filename}'.")
+        recipes = []
+    except IsADirectoryError:
+        print(f"Error: '{filename}' is a directory, not a file.")
+        recipes = []
+    except UnicodeDecodeError:
+        print(f"Error: Could not decode '{filename}'. The file encoding may be unsupported.")
+        recipes = []
+    except IOError:
+        print(f"Error: Could not read file '{filename}'.")
+        recipes = []
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+    return recipes
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+#responsible by Pitsinee Chantarothai  
+# Overwrite the file
+def save(filename, recipes): 
+    try:
+        with open(filename, 'w') as file:
+            file.writelines(recipes) 
+    except IOError:
+        print(f"Error: Unable to write to file '{filename}'.")
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+#responsible by Suwaphit Dechritthirong
+def add_recipe(filename, name, ingredients, instructions, calories):
+    recipes = load(filename)
 
-# Translations
-*.mo
-*.pot
+    if recipes:
+        last_id = 0
+        for recipe in recipes:
+            recipe_parts = recipe.strip().split(";")
+            current_id = int(recipe_parts[0])
+            if(current_id > last_id):
+                last_id = current_id
+    else:
+        last_id = 0
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+    new_id = last_id + 1
 
-# Flask stuff:
-instance/
-.webassets-cache
+    ingredients_str = '|'.join(ingredients)
+    instructions_str = '|'.join(instructions)
 
-# Scrapy stuff:
-.scrapy
+    new_recipe = f"{new_id};{name};{ingredients_str};{instructions_str};{calories}\n"
 
-# Sphinx documentation
-docs/_build/
+    try:
+        with open(filename, 'a') as file:
+            file.write(new_recipe)
+        
+        print(f"Recipe '{name}' added with ID {new_id}")
+    
+    except IOError:
+        print(f"Error: Unable to write to file '{filename}'.")
 
-# PyBuilder
-.pybuilder/
-target/
+#responsible by Suwaphit Dechritthirong     
+# Update by ID
+def update_recipe(filename, recipe_id, new_name, new_ingredients, new_instructions, new_calories):
+    recipes = load(filename)
+    updated = False
 
-# Jupyter Notebook
-.ipynb_checkpoints
+    for index, recipe in enumerate(recipes): 
+        # for index in range(len(recipes)) --> find index
+        # for recipe in recipes --> get recipe line by line
 
-# IPython
-profile_default/
-ipython_config.py
+        recipe_data = recipe.strip().split(";")
+        if int(recipe_data[0]) == int(recipe_id):
+            ingredients_str = '|'.join(new_ingredients)
+            instructions_str = '|'.join(new_instructions)
+            recipes[index] = f"{recipe_id};{new_name};{ingredients_str};{instructions_str};{new_calories}\n"
+            updated = True
+            break
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+    if updated:
+        save(filename, recipes)
+        print(f"Recipe with ID {recipe_id} updated successfully.")
+    else:
+        print(f"Error: Recipe with ID: {recipe_id} not found.")
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+#responsible by Voranipit Apichatchote  
+# Delete by ID
+def delete_recipe(filename, recipe_id):
+    recipes = load(filename)
+    initial_count = len(recipes)
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+    new_recipes = []
+    for recipe in recipes:
+        recipe_parts = recipe.split(";")
+        if len(recipe_parts) >= 1 and int(recipe_parts[0]) != int(recipe_id):
+            new_recipes.append(recipe)
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
+    if len(new_recipes) < initial_count:
+        save(filename, new_recipes)
+        print(f"Recipe with ID {recipe_id} deleted successfully.")
+    else:
+        print(f"Error: Recipe with ID {recipe_id} not found.")
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+#responsible by Voranipit Apichatchote      
+def display_recipes(filename):
+    recipes = load(filename)
+    print("========================================================================\n")
+    for recipe in recipes:
+        recipe = recipe.strip().split(";")
+        recipe_id = recipe[0]
+        name = recipe[1]
+        ingredients = recipe[2].split("|")
+        instructions = recipe[3].split("|")
+        calories = recipe[4]
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+        print(f"{recipe_id}. {name}")
+        print("- Ingredients")
 
-# SageMath parsed files
-*.sage.py
+        for ingredient in ingredients:
+            print(f"     - {ingredient}")
+            
+        print("- Instructions")
+        
+        for index, instruction in enumerate(instructions, start=1):
+            print(f"     {index}. {instruction}")
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+        print(f"- Calories: {calories}")
+        print("========================================================================")
 
-# Spyder project settings
-.spyderproject
-.spyproject
+#responsible by Voranipit Apichatchote  
+def filter_by_calories(filename, max_calories):
+    recipes = load(filename)
 
-# Rope project settings
-.ropeproject
+    filtered_recipes = list(filter(
+        lambda recipe: int(recipe.strip().split(';')[4]) <= max_calories if len(recipe.strip().split(';')) == 5 else False,
+        recipes
+    ))
 
-# mkdocs documentation
-/site
+    if(filtered_recipes == []):
+        print(f"\nRecipes with Calories <= {max_calories} Not Found.")
+        return
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+    print(f"\nRecipes with Calories <= {max_calories}:")
+    for recipe in filtered_recipes:
+        recipe_parts = recipe.strip().split(';')
+        
+        # Extract recipe details
+        recipe_id = recipe_parts[0]
+        name = recipe_parts[1]
+        ingredients = recipe_parts[2].split('|')
+        instructions = recipe_parts[3].split('|')
+        calories = recipe_parts[4]
+        
+        # Display recipe in the specified format
+        print(f"{recipe_id}. {name}")
+        print(f"- Ingredients")
+        for ingredient in ingredients:
+            print(f"      - {ingredient}")
+        print(f"- Instructions")
+        for i, instruction in enumerate(instructions, start=1):
+            print(f"      {i}. {instruction}")
+        print(f"- Calories: {calories}\n")
 
-# Pyre type checker
-.pyre/
+#responsible by Pukjira Thanomwong  
+WELCOME_ART = """
+██████╗ ███████╗ ██████╗██╗██████╗ ███████╗    ███╗   ███╗ █████╗ ███╗   ██╗ █████╗  ██████╗ ███████╗██████╗ 
+██╔══██╗██╔════╝██╔════╝██║██╔══██╗██╔════╝    ████╗ ████║██╔══██╗████╗  ██║██╔══██╗██╔════╝ ██╔════╝██╔══██╗
+██████╔╝█████╗  ██║     ██║██████╔╝█████╗      ██╔████╔██║███████║██╔██╗ ██║███████║██║  ███╗█████╗  ██████╔╝
+██╔══██╗██╔══╝  ██║     ██║██╔═══╝ ██╔══╝      ██║╚██╔╝██║██╔══██║██║╚██╗██║██╔══██║██║   ██║██╔══╝  ██╔══██╗
+██║  ██║███████╗╚██████╗██║██║     ███████╗    ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║  ██║╚██████╔╝███████╗██║  ██║
+╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝╚═╝     ╚══════╝    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝                                                                                                     
+"""
+     
+DISPLAY_ART = """
+██████╗ ███████╗ ██████╗██╗██████╗ ███████╗███████╗
+██╔══██╗██╔════╝██╔════╝██║██╔══██╗██╔════╝██╔════╝
+██████╔╝█████╗  ██║     ██║██████╔╝█████╗  ███████╗
+██╔══██╗██╔══╝  ██║     ██║██╔═══╝ ██╔══╝  ╚════██║
+██║  ██║███████╗╚██████╗██║██║     ███████╗███████║
+╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝╚═╝     ╚══════╝╚══════╝
+"""
 
-# pytype static type analyzer
-.pytype/
+GOODBYE_ART = """
+ ██████╗  ██████╗  ██████╗ ██████╗     ██████╗ ██╗   ██╗███████╗
+██╔════╝ ██╔═══██╗██╔═══██╗██╔══██╗    ██╔══██╗╚██╗ ██╔╝██╔════╝
+██║  ███╗██║   ██║██║   ██║██║  ██║    ██████╔╝ ╚████╔╝ █████╗  
+██║   ██║██║   ██║██║   ██║██║  ██║    ██╔══██╗  ╚██╔╝  ██╔══╝  
+╚██████╔╝╚██████╔╝╚██████╔╝██████╔╝    ██████╔╝   ██║   ███████╗
+ ╚═════╝  ╚═════╝  ╚═════╝ ╚═════╝     ╚═════╝    ╚═╝   ╚══════╝                                                             
+"""
+#responsible by Pitsinee Chantarothai
+def main():
+    filename = "recipes.txt"
+    clear_screen()
+    print(WELCOME_ART)  # Print the ASCII welcome art
+    print("Welcome to the Recipe Manager!")
+    
+    while True:
+        print("\nPlease select an option:")
+        print("1. Add a new recipe")
+        print("2. Update a recipe by ID")
+        print("3. Delete a recipe by ID")
+        print("4. Display all recipes")
+        print("5. Filter recipes by calories")
+        print("6. Exit")
 
-# Cython debug symbols
-cython_debug/
+        choice = input("Enter your choice (1-6): ")
+        clear_screen()
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+        if choice == '1':
+            name = input("Enter the recipe name: ")
+            ingredients = input("Enter ingredients (separated by commas): ").split(", ")
+            instructions = input("Enter instructions (separated by commas): ").split(", ")
+            calories = input("Enter calories: ")
+            add_recipe(filename, name, ingredients, instructions, calories)
+        
+        elif choice == '2':
+            recipe_id = int(input("Enter the recipe ID to update: "))
+            new_name = input("Enter the new name: ")
+            new_ingredients = input("Enter new ingredients (separated by commas): ").split(", ")
+            new_instructions = input("Enter new instructions (separated by commas): ").split(", ")
+            new_calories = input("Enter new calories: ")
+            update_recipe(filename, recipe_id, new_name, new_ingredients, new_instructions, new_calories)
+        
+        elif choice == '3':
+            recipe_id = int(input("Enter the recipe ID to delete: "))
+            delete_recipe(filename, recipe_id)
+        
+        elif choice == '4':
+            print(DISPLAY_ART)
+            display_recipes(filename)
+        
+        elif choice == '5':
+            max_calories = int(input("Enter the maximum calories: "))
+            filter_by_calories(filename, max_calories)
+        
+        elif choice == '6':
+            print(GOODBYE_ART)
+            print("Thank you for using the Recipe Manager.")
+            break
+        
+        else:
+            print("Invalid choice. Please try again.")
+
+        input("\nPress Enter to return to the main menu...")
+        clear_screen()
+
+# Run the main program
+if __name__ == "__main__":
+    main()
